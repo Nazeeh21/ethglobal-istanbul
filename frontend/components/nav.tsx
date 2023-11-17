@@ -40,6 +40,14 @@ export function Nav() {
         >
           <p>New Challenge</p>
         </Link>
+        <Link
+          href='/my-challenges'
+          className={`mr-5 text-sm ${
+            pathname !== '/my-challenges' && 'opacity-50'
+          }`}
+        >
+          <p>My Challenges</p>
+        </Link>
         {address && (
           <Link
             href='/profile'
