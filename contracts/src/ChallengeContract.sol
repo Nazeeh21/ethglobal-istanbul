@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-// TODO
-// - Withdraw function - talk to oracle, get response and let everyone withdraw their share
-
 interface IERC20 {
     function transferFrom(address from, address to, uint256 value) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 value) external returns (bool);
+}
+
+// Interface for Uma Oracle
+interface IOracle {
+    function assertChallenge(address contractAddress, string memory userId) external returns (bytes32);
+    function getChallenge(bytes32 assertionId) external returns (bool, address, string memory);
 }
 
 /**
@@ -14,7 +18,8 @@ interface IERC20 {
  */
 
 contract ChallengeContract {
-    IERC20 public token;
+    IERC20 public token; // ApeCoin token address
+    IOracle public oracle = IOracle(0x0E1442d98ce998a25825D68FDB99f4A42B8872e8); // Uma Oracle address
 
 	// Enum for allowed time units
 	enum TimeUnit {
@@ -47,6 +52,12 @@ contract ChallengeContract {
 		string lensId;
 	}
 
+    // Struct to hold the withdrawals
+    struct Withdrawal {
+        bool eligible;
+        bool withdrawn;
+    }
+
 	// State of the challenge
 	enum ChallengeState {
 		Open,
@@ -62,6 +73,7 @@ contract ChallengeContract {
 	mapping(string => address) private participantLensIdToAddress;
 	mapping(address => string) private addressToJudgeLensId;
 	mapping(string => address) private judgeLensIdToAddress;
+    mapping(address => Withdrawal) private withdrawals;
 
 	// Events
 	event ChallengeContractCreated(address challengeAddress, address owner);
@@ -69,6 +81,7 @@ contract ChallengeContract {
 	event ChallengeStarted();
 	event ChallengeFinished(address indexed winner);
     event TokensDeposited(address indexed participant, uint256 amount);
+    event WithdrawalEvent(address indexed participant, uint256 amount);
 
 	// Constructor
 	constructor(
@@ -191,6 +204,26 @@ contract ChallengeContract {
         }
     }
 
+    // Withdraw function to let participants withdraw their share
+    function withdrawShare() external onlyParticipant inState(ChallengeState.Finished) {
+        uint256 totalPool = token.balanceOf(address(this));
+        require(totalPool > 0, "No funds to withdraw");
+
+        uint256 participantCount = challenge.participants.length;
+        require(participantCount > 0, "No participants");
+
+        uint256 share = totalPool / participantCount;
+        require(share > 0, "Share is too small");
+
+        require(challenge.tokenDeposits[msg.sender] > 0, "No deposit to withdraw");
+
+        challenge.tokenDeposits[msg.sender] = 0; // Prevent re-entrancy
+        require(token.transfer(msg.sender, share), "Withdrawal failed"); // Transfer the share to the participant
+
+        emit WithdrawalEvent(msg.sender, share);
+    }
+
+
 	// Check whether the caller is a participant
 	function isParticipant(address _addr) public view returns (bool) {
 		return contains(challenge.participants, _addr);
@@ -228,6 +261,32 @@ contract ChallengeContract {
 
 		emit ChallengeFinished(_winner);
 	}
+
+    function withdrawWinnings(string memory userId) external onlyParticipant inState(ChallengeState.Finished) {
+        require(!withdrawals[msg.sender].withdrawn, "Already withdrawn");
+        
+        // First, assert the challenge passing in this contract's address and the user ID
+        bytes32 assertionId = oracle.assertChallenge(address(this), userId); // Getting assertion from Uma Oracle
+
+        // Then, retrieve the challenge status using the assertion ID. (Assuming synchronous result for simplicity)
+        (bool eligible, address challengeId, string memory resolvedUserId) = oracle.getChallenge(assertionId); // Calling Uma Oracle
+
+        require(eligible, "Not eligible for withdrawal");
+        require(challengeId == address(this), "Challenge ID mismatch");
+        require(keccak256(abi.encodePacked(resolvedUserId)) == keccak256(abi.encodePacked(userId)), "User ID mismatch");
+
+        withdrawals[msg.sender].eligible = true;
+        withdrawals[msg.sender].withdrawn = true;
+        
+        // Set the participant's deposit to 0 to prevent re-entrancy
+        uint256 amount = challenge.tokenDeposits[msg.sender];
+        challenge.tokenDeposits[msg.sender] = 0;
+
+        // Transfer the tokens to the participant
+        require(token.transfer(msg.sender, amount), "Token transfer failed");
+        
+        emit WithdrawalEvent(msg.sender, amount);
+    }
 
 	// Utility function to check if an address is in an array of addresses
 	function contains(
