@@ -1,133 +1,186 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useCreatePost } from '@lens-protocol/react-web';
-import { create } from 'ipfs-http-client';
-import { NextPage } from 'next';
-import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { create } from "ipfs-http-client";
+import {
+  APECOIN_CONTRACT_ADDRESS,
+  FACTORY_CONTRACT_ADDRESS,
+} from "@/constants";
+import { prepareWriteContract, writeContract } from "@wagmi/core";
+import { useState } from "react";
+import { Address, useAccount, useContractEvent } from "wagmi";
+import FactorContractABI from "../../abi/Factory.json";
 
 export default function NewPage() {
-  const [description, setDescription] = useState('');
+  const { address } = useAccount();
   const [wagerAmount, setWagerAmount] = useState<number>(0); // in matic
-  const [participants, setParticipants] = useState<string[]>([]); // lens handles
-  const [judges, setJudges] = useState<string[]>([]); // lens handles
-  const [activity, setActivity] = useState<string>('push-ups'); // eg. pushups
-  const [completionTimeUnit, setCompletionTimeUnit] = useState('day'); // eg. hour / day / week / month / year
+  const [participants, setParticipants] = useState<string[]>([]); // address
+  const [participantsLensId, setParticipantsLensId] = useState<string[]>([]); // lens handles
+  const [judges, setJudges] = useState<string[]>([]); // address handles
+  const [judgesLensId, setJudgesLensId] = useState<string[]>([]); // address handles
+  const [activity, setActivity] = useState<string>(""); // eg. pushups
+  const [completionTimeUnit, setCompletionTimeUnit] = useState(""); // eg. hour / day / week / month / year
   const [amountOfActivityPerTimeUnit, setAmountOfActivityPerTimeUnit] =
-    useState(10);
-  const [duration, setDuration] = useState(10); // in competion time units
+    useState(0);
+  const [duration, setDuration] = useState(0); // in competion time units
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
     // log out the form values
+    setLoading(true);
 
-    const challenge = {
-      description,
-      wagerAmount,
-      participants,
-      judges,
-      activity,
-      completionTimeUnit,
-      amountOfActivityPerTimeUnit,
-      duration,
-    };
+    try {
+      const challenge = [
+        address,
+        wagerAmount,
+        // description,
+        participants,
+        participantsLensId,
+        judges,
+        judgesLensId,
+        activity,
+        completionTimeUnit,
+        amountOfActivityPerTimeUnit,
+        duration,
+        APECOIN_CONTRACT_ADDRESS as Address,
+      ];
+      console.log(challenge);
 
-    console.log(challenge);
+      const config = await prepareWriteContract({
+        address: FACTORY_CONTRACT_ADDRESS,
+        abi: FactorContractABI,
+        functionName: "createChallengeContract",
+        args: challenge,
+      });
+
+      const { hash } = await writeContract(config);
+      console.log(hash);
+
+      if (hash) {
+        await fetch(
+          // TODO: change this to the actual backend url
+          "https://ethglobal-istanbul-backend-gsf5gk0h1-nazeeh21.vercel.app/",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contractAddress: hash,
+            }),
+          }
+        );
+        alert("Challenge created successfully");
+      }
+    } catch (error) {
+      console.error("error while creating a challenge: ", error);
+      alert("Error while creating a challenge");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const uploadToIpfs = async () => {
-    const challenge = {
-      description,
+    const challenge = [
+      address,
       wagerAmount,
+      // description,
       participants,
+      participantsLensId,
       judges,
+      judgesLensId,
       activity,
       completionTimeUnit,
       amountOfActivityPerTimeUnit,
       duration,
-    };
+      APECOIN_CONTRACT_ADDRESS as Address,
+    ];
 
-    const client = create({ url: 'https://ipfs.io/ipfs/' });
+    const client = create({ url: "https://ipfs.io/ipfs/" });
     const res = await client.add(JSON.stringify(challenge));
     console.log(res);
   };
 
   return (
-    <main className='px-10 py-14 mx-auto flex flex-col items-center gap-6'>
-      <h1 className='text-3xl font-bold'>New Challenge</h1>
+    <main className="px-10 py-14 mx-auto flex flex-col items-center gap-6">
+      <h1 className="text-3xl font-bold">New Challenge</h1>
 
-      <div className='flex gap-4 items-center justify-center mx-auto mt-4'>
+      <div className="flex gap-4 items-center justify-center mx-auto mt-4">
         <span>I want to do</span>
         <Input
-          type='number'
+          type="number"
           value={amountOfActivityPerTimeUnit}
           onChange={(e) =>
             setAmountOfActivityPerTimeUnit(parseInt(e.target.value))
           }
-          className='w-20'
+          className="w-20"
         />
         <Input
           value={activity}
           onChange={(e) => setActivity(e.target.value)}
-          className='w-30'
+          className="w-30"
         />
         <span>every</span>
         <Input
           value={completionTimeUnit}
           onChange={(e) => setCompletionTimeUnit(e.target.value)}
-          className='w-20'
+          className="w-20"
         />
       </div>
 
-      <div className='flex gap-4 items-center justify-center mt-4'>
+      <div className="flex gap-4 items-center justify-center mt-4">
         <span>for</span>
         <Input
-          type='number'
+          type="number"
           value={duration}
           onChange={(e) => setDuration(parseInt(e.target.value))}
-          className='w-20'
+          className="w-20"
         />
         <span>{completionTimeUnit}s</span>
       </div>
 
-      <div className='flex gap-4 items-center justify-center mt-4'>
+      <div className="flex gap-4 items-center justify-center mt-4">
         <span>Wager</span>
         <Input
-          type='number'
+          type="number"
           value={wagerAmount}
           onChange={(e) => setWagerAmount(parseInt(e.target.value))}
-          className='w-20'
+          className="w-20"
         />
         <span>MATIC</span>
       </div>
 
-      <div className='flex gap-4 items-center justify-center mt-4'>
+      <div className="flex gap-4 items-center justify-center mt-4">
         <span>Participants</span>
         <Input
-          value={participants.join(',')}
-          onChange={(e) => setParticipants(e.target.value.split(','))}
-          className='w-30'
+          value={participants.join(",")}
+          onChange={(e) => setParticipants(e.target.value.split(","))}
+          className="w-30"
         />
       </div>
 
-      <div className='flex gap-4 items-center justify-center mt-4'>
+      <div className="flex gap-4 items-center justify-center mt-4">
         <span>Judges</span>
         <Input
-          value={judges.join(',')}
-          onChange={(e) => setJudges(e.target.value.split(','))}
-          className='w-30'
+          value={judges.join(",")}
+          onChange={(e) => setJudges(e.target.value.split(","))}
+          className="w-30"
         />
       </div>
 
-      <Button onClick={onSubmit} className='mt-4 mx-auto'>
-        Create Challenge
-      </Button>
-
-      <Button onClick={uploadToIpfs} className='mt-4 mx-auto'>
-        Upload to IPFS
-      </Button>
+      {loading ? (
+        <div className="text-lg">Loading...</div>
+      ) : (
+        <>
+          <Button onClick={onSubmit}>Create</Button>
+          <Button onClick={uploadToIpfs} className="mt-4 mx-auto">
+            Upload to IPFS
+          </Button>
+        </>
+      )}
     </main>
   );
 }
