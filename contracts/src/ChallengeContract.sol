@@ -200,10 +200,22 @@ contract ChallengeContract {
 		return contains(challenge.participants, _addr);
 	}
 
+    // Check whether the lensId is a participant
+    function isParticipantByLensId(string memory _lensId) public view returns (bool) {
+        address participantAddress = participantLensIdToAddress[_lensId];
+        return contains(challenge.participants, participantAddress);
+    }
+
 	// Check whether the caller is a judge
 	function isJudge(address _addr) public view returns (bool) {
 		return contains(challenge.judges, _addr);
 	}
+
+    // Check whether the lensId is a judge
+    function isJudgeByLensId(string memory _lensId) public view returns (bool) {
+        address judgeAddress = judgeLensIdToAddress[_lensId];
+        return contains(challenge.judges, judgeAddress);
+    }
 
 	// Function to declare the winner
 	function declareWinner(
