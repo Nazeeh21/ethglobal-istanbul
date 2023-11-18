@@ -24,11 +24,12 @@ export default function RootLayout({ children }) {
             <meta name="apple-mobile-web-app-status-bar-style" content="black" />
             <meta name="description" content="Get fit, get aped, get paid." />
             <title>ApeFit</title>
-            <body className={inter.className}>
+            {/* <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,400,700,500,600,300&display=swap" rel="stylesheet"></link> */}
+            <body>
                 <Web3ModalProvider>
                     <LensProvider>
                         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                            <Nav />
+                            {/* <Nav /> */}
                             {children}
                         </ThemeProvider>
                     </LensProvider>

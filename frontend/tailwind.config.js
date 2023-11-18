@@ -8,6 +8,9 @@ module.exports = {
     './src/**/*.{ts,tsx}',
 	],
   theme: {
+    // fontFamily: {
+    //   'body': ["Clash Display", "sans-serif"],
+    // },
     container: {
       center: true,
       padding: "2rem",

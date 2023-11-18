@@ -46,7 +46,7 @@ export const GET = async (_request: NextRequest) => {
           functionName: 'assertChallenge',
           args: [
             `${process.env.GOERLI_ORACLE_ADDRESS}` as `0x${string}`,
-              '1234'
+              '0x1234'
           ]
         });
         const result = await walletClient.writeContract(request);
