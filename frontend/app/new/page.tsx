@@ -2,15 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { create } from "ipfs-http-client";
 import {
   APECOIN_CONTRACT_ADDRESS,
   FACTORY_CONTRACT_ADDRESS,
 } from "@/constants";
 import { prepareWriteContract, writeContract } from "@wagmi/core";
+// import { create } from "ipfs-http-client";
 import { useState } from "react";
-import { Address, useAccount, useContractEvent } from "wagmi";
+import { Address, useAccount } from "wagmi";
 import FactorContractABI from "../../abi/Factory.json";
 
 export default function NewPage() {
@@ -83,26 +82,26 @@ export default function NewPage() {
     }
   };
 
-  const uploadToIpfs = async () => {
-    const challenge = [
-      address,
-      wagerAmount,
-      // description,
-      participants,
-      participantsLensId,
-      judges,
-      judgesLensId,
-      activity,
-      completionTimeUnit,
-      amountOfActivityPerTimeUnit,
-      duration,
-      APECOIN_CONTRACT_ADDRESS as Address,
-    ];
+  // const uploadToIpfs = async () => {
+  //   const challenge = [
+  //     address,
+  //     wagerAmount,
+  //     // description,
+  //     participants,
+  //     participantsLensId,
+  //     judges,
+  //     judgesLensId,
+  //     activity,
+  //     completionTimeUnit,
+  //     amountOfActivityPerTimeUnit,
+  //     duration,
+  //     APECOIN_CONTRACT_ADDRESS as Address,
+  //   ];
 
-    const client = create({ url: "https://ipfs.io/ipfs/" });
-    const res = await client.add(JSON.stringify(challenge));
-    console.log(res);
-  };
+  //   const client = create({ url: "https://ipfs.io/ipfs/" });
+  //   const res = await client.add(JSON.stringify(challenge));
+  //   console.log(res);
+  // };
 
   return (
     <main className="px-10 py-14 mx-auto flex flex-col items-center gap-6">
@@ -193,9 +192,9 @@ export default function NewPage() {
       ) : (
         <>
           <Button onClick={onSubmit}>Create</Button>
-          <Button onClick={uploadToIpfs} className="mt-4 mx-auto">
+          {/* <Button onClick={uploadToIpfs} className="mt-4 mx-auto">
             Upload to IPFS
-          </Button>
+          </Button> */}
         </>
       )}
     </main>
