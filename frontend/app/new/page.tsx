@@ -2,14 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   APECOIN_CONTRACT_ADDRESS,
   FACTORY_CONTRACT_ADDRESS,
 } from "@/constants";
 import { prepareWriteContract, writeContract } from "@wagmi/core";
+// import { create } from "ipfs-http-client";
 import { useState } from "react";
-import { Address, useAccount, useContractEvent } from "wagmi";
+import { Address, useAccount } from "wagmi";
 import FactorContractABI from "../../abi/Factory.json";
 
 export default function NewPage() {
@@ -59,19 +59,20 @@ export default function NewPage() {
       console.log(hash);
 
       if (hash) {
-        await fetch(
-          // TODO: change this to the actual backend url
-          "https://ethglobal-istanbul-backend-gsf5gk0h1-nazeeh21.vercel.app/",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contractAddress: hash,
-            }),
-          }
-        );
+        // TODO: change this to the actual backend url
+        // await fetch(
+        //
+        //   "https://ethglobal-istanbul-backend-gsf5gk0h1-nazeeh21.vercel.app/",
+        //   {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({
+        //       contractAddress: hash,
+        //     }),
+        //   }
+        // );
         alert("Challenge created successfully");
       }
     } catch (error) {
@@ -82,94 +83,121 @@ export default function NewPage() {
     }
   };
 
+  // const uploadToIpfs = async () => {
+  //   const challenge = [
+  //     address,
+  //     wagerAmount,
+  //     // description,
+  //     participants,
+  //     participantsLensId,
+  //     judges,
+  //     judgesLensId,
+  //     activity,
+  //     completionTimeUnit,
+  //     amountOfActivityPerTimeUnit,
+  //     duration,
+  //     APECOIN_CONTRACT_ADDRESS as Address,
+  //   ];
+
+  //   const client = create({ url: "https://ipfs.io/ipfs/" });
+  //   const res = await client.add(JSON.stringify(challenge));
+  //   console.log(res);
+  // };
+
   return (
-    <main className="px-10 py-14 max-w-fit mx-auto">
+    <main className="px-10 py-14 mx-auto flex flex-col items-center gap-6">
       <h1 className="text-3xl font-bold">New Challenge</h1>
-      <form className="flex flex-col gap-6 mt-8">
 
-        <div className="flex flex-col gap-4">
-          <Label>Wager Amount in matic</Label>
-          <Input
-            type="number"
-            value={wagerAmount}
-            onChange={(e) => setWagerAmount(parseInt(e.target.value))}
-          />
-        </div>
+      <div className="flex gap-4 items-center justify-center mx-auto mt-4">
+        <span>I want to do</span>
+        <Input
+          type="number"
+          value={amountOfActivityPerTimeUnit}
+          onChange={(e) =>
+            setAmountOfActivityPerTimeUnit(parseInt(e.target.value))
+          }
+          className="w-20"
+        />
+        <Input
+          value={activity}
+          onChange={(e) => setActivity(e.target.value)}
+          className="w-30"
+        />
+        <span>every</span>
+        <Input
+          value={completionTimeUnit}
+          onChange={(e) => setCompletionTimeUnit(e.target.value)}
+          className="w-20"
+        />
+      </div>
 
-        <div className="flex flex-col gap-4">
-          <Label>Participants - comma separated addresses</Label>
-          <Input
-            value={participants.join(",")}
-            onChange={(e) => setParticipants(e.target.value.split(","))}
-          />
-        </div>
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>for</span>
+        <Input
+          type="number"
+          value={duration}
+          onChange={(e) => setDuration(parseInt(e.target.value))}
+          className="w-20"
+        />
+        <span>{completionTimeUnit}s</span>
+      </div>
 
-        <div className="flex flex-col gap-4">
-          <Label>Participants - comma separated lens handles</Label>
-          <Input
-            value={participantsLensId.join(",")}
-            onChange={(e) => setParticipantsLensId(e.target.value.split(","))}
-          />
-        </div>
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>Wager</span>
+        <Input
+          type="number"
+          value={wagerAmount}
+          onChange={(e) => setWagerAmount(parseInt(e.target.value))}
+          className="w-20"
+        />
+        <span>MATIC</span>
+      </div>
 
-        <div className="flex flex-col gap-4">
-          <Label>Judges - comma separated addresses</Label>
-          <Input
-            value={judges.join(",")}
-            onChange={(e) => setJudges(e.target.value.split(","))}
-          />
-        </div>
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>Participants</span>
+        <Input
+          value={participants.join(",")}
+          onChange={(e) => setParticipants(e.target.value.split(","))}
+          className="w-30"
+        />
+      </div>
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>Participants Lens ID</span>
+        <Input
+          value={participantsLensId.join(",")}
+          onChange={(e) => setParticipantsLensId(e.target.value.split(","))}
+          className="w-30"
+        />
+      </div>
 
-        <div className="flex flex-col gap-4">
-          <Label>Judges - comma separated lens handles</Label>
-          <Input
-            value={judgesLensId.join(",")}
-            onChange={(e) => setJudgesLensId(e.target.value.split(","))}
-          />
-        </div>
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>Judges</span>
+        <Input
+          value={judges.join(",")}
+          onChange={(e) => setJudges(e.target.value.split(","))}
+          className="w-30"
+        />
+      </div>
 
-        <div className="flex flex-col gap-4">
-          <Label>Activity</Label>
-          <Input
-            value={activity}
-            onChange={(e) => setActivity(e.target.value)}
-          />
-        </div>
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>Judges Lens Id</span>
+        <Input
+          value={judgesLensId.join(",")}
+          onChange={(e) => setJudgesLensId(e.target.value.split(","))}
+          className="w-30"
+        />
+      </div>
 
-        <div className="flex flex-col gap-4">
-          <Label>Completion Time Unit</Label>
-          <Input
-            value={completionTimeUnit}
-            onChange={(e) => setCompletionTimeUnit(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <Label>Amount of Activity per Time Unit</Label>
-          <Input
-            type="number"
-            value={amountOfActivityPerTimeUnit}
-            onChange={(e) =>
-              setAmountOfActivityPerTimeUnit(parseInt(e.target.value))
-            }
-          />
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <Label>Duration</Label>
-          <Input
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(parseInt(e.target.value))}
-          />
-        </div>
-
-        {loading ? (
-          <div className="text-lg">Loading...</div>
-        ) : (
+      {loading ? (
+        <div className="text-lg">Loading...</div>
+      ) : (
+        <>
           <Button onClick={onSubmit}>Create</Button>
-        )}
-      </form>
+          {/* <Button onClick={uploadToIpfs} className="mt-4 mx-auto">
+            Upload to IPFS
+          </Button> */}
+        </>
+      )}
     </main>
   );
 }
