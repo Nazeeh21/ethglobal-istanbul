@@ -1,24 +1,47 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+// TODO
+// - Withdraw function - talk to oracle, get response and let everyone withdraw their share
+
+// - Funding function - test if everything works properly
+// - Challenge start - test if challenge is automatically started once the last participant funds the wager amount
+
 /**
  * @title Challenge Contract
  */
 
 contract ChallengeContract {
+	// Enum for allowed time units
+	enum TimeUnit {
+		Hour,
+		Day,
+		Week,
+		Month,
+		Year
+	}
+
 	// Challenge data structure
 	struct Challenge {
 		address factory;
 		address owner;
 		uint256 wagerAmount;
 		address[] participants;
+		string[] participantsLensIds;
 		address[] judges;
+		string[] judgesLensIds;
 		string activity;
-		string completionTimeUnit;
+		TimeUnit completionTimeUnit;
 		uint256 activityPerTimeUnit;
 		uint256 duration;
 		mapping(address => uint256) deposits;
 		ChallengeState state;
+	}
+
+	// Struct to hold participant and judge information
+	struct UserInfo {
+		address userAddress;
+		string lensId;
 	}
 
 	// State of the challenge
@@ -30,6 +53,12 @@ contract ChallengeContract {
 
 	// Challenge instance
 	Challenge private challenge;
+
+	// Mappings for addresses and Lens IDs
+	mapping(address => string) private addressToParticipantLensId;
+	mapping(string => address) private participantLensIdToAddress;
+	mapping(address => string) private addressToJudgeLensId;
+	mapping(string => address) private judgeLensIdToAddress;
 
 	// Events
 	event ChallengeContractCreated(address challengeAddress, address owner);
@@ -43,7 +72,9 @@ contract ChallengeContract {
 		address _owner,
 		uint256 _wagerAmount,
 		address[] memory _participants,
+		string[] memory _participantsLensIds,
 		address[] memory _judges,
+		string[] memory _judgesLensIds,
 		string memory _activity,
 		string memory _completionTimeUnit,
 		uint256 _activityPerTimeUnit,
@@ -51,18 +82,75 @@ contract ChallengeContract {
 	) {
 		require(_participants.length > 0, "At least one participant required");
 		require(_judges.length > 0, "At least one judge required");
+		require(
+			_participants.length == _participantsLensIds.length,
+			"Participants and Lens IDs must match"
+		);
+		require(
+			_judges.length == _judgesLensIds.length,
+			"Judges and Lens IDs must match"
+		);
 		challenge.factory = _factory;
 		challenge.owner = _owner;
 		challenge.wagerAmount = _wagerAmount;
 		challenge.participants = _participants;
+		challenge.participantsLensIds = _participantsLensIds;
 		challenge.judges = _judges;
+		challenge.judgesLensIds = _judgesLensIds;
 		challenge.activity = _activity;
-		challenge.completionTimeUnit = _completionTimeUnit;
+		challenge.completionTimeUnit = parseTimeUnit(_completionTimeUnit);
 		challenge.activityPerTimeUnit = _activityPerTimeUnit;
 		challenge.duration = _duration;
 		challenge.state = ChallengeState.Open;
 
+		// Populate the new mappings
+		for (uint256 i = 0; i < _participants.length; i++) {
+			addressToParticipantLensId[_participants[i]] = _participantsLensIds[
+				i
+			];
+			participantLensIdToAddress[_participantsLensIds[i]] = _participants[
+				i
+			];
+		}
+
+		for (uint256 i = 0; i < _judges.length; i++) {
+			addressToJudgeLensId[_judges[i]] = _judgesLensIds[i];
+			judgeLensIdToAddress[_judgesLensIds[i]] = _judges[i];
+		}
+
 		emit ChallengeContractCreated(address(this), _owner);
+	}
+
+	// Function to parse time unit string to TimeUnit enum
+	function parseTimeUnit(
+		string memory _unit
+	) internal pure returns (TimeUnit) {
+		bytes32 hash = keccak256(abi.encodePacked(_unit));
+		if (hash == keccak256(abi.encodePacked("hour"))) return TimeUnit.Hour;
+		if (hash == keccak256(abi.encodePacked("day"))) return TimeUnit.Day;
+		if (hash == keccak256(abi.encodePacked("week"))) return TimeUnit.Week;
+		if (hash == keccak256(abi.encodePacked("month"))) return TimeUnit.Month;
+		if (hash == keccak256(abi.encodePacked("year"))) return TimeUnit.Year;
+		revert("Invalid time unit");
+	}
+
+	// Helper function to convert time units to strings
+	function timeUnitToString(
+		TimeUnit _unit
+	) internal pure returns (string memory) {
+		if (_unit == TimeUnit.Hour) {
+			return "hour";
+		} else if (_unit == TimeUnit.Day) {
+			return "day";
+		} else if (_unit == TimeUnit.Week) {
+			return "week";
+		} else if (_unit == TimeUnit.Month) {
+			return "month";
+		} else if (_unit == TimeUnit.Year) {
+			return "year";
+		} else {
+			revert("Invalid time unit");
+		}
 	}
 
 	// Modifiers
@@ -88,7 +176,14 @@ contract ChallengeContract {
 		onlyParticipant
 		inState(ChallengeState.Open)
 	{
-		require(msg.value == challenge.wagerAmount, "Incorrect wager amount");
+		// Convert wager amount to gwei
+		uint256 wagerAmountInGwei = challenge.wagerAmount * 1e9;
+
+		// Check if the deposited amount is at least equal to the wager amount
+		require(
+			msg.value >= wagerAmountInGwei,
+			"Deposited amount is less than the wager amount"
+		);
 
 		challenge.deposits[msg.sender] += msg.value;
 		emit Deposit(msg.sender, msg.value);
@@ -152,20 +247,6 @@ contract ChallengeContract {
 		return true;
 	}
 
-	// Allow users to recover their wagers in case of a challenge cancellation or abnormal condition
-	function recoverWager()
-		external
-		onlyParticipant
-		inState(ChallengeState.Open)
-	{
-		uint256 depositedAmount = challenge.deposits[msg.sender];
-		require(depositedAmount > 0, "No deposit to recover");
-
-		challenge.deposits[msg.sender] = 0;
-		(bool success, ) = msg.sender.call{ value: depositedAmount }("");
-		require(success, "Transfer failed");
-	}
-
 	// Getter functions
 	function getFactory() public view returns (address) {
 		return challenge.factory;
@@ -183,8 +264,16 @@ contract ChallengeContract {
 		return challenge.participants;
 	}
 
+	function getParticipantsLensIds() public view returns (string[] memory) {
+		return challenge.participantsLensIds;
+	}
+
 	function getJudges() public view returns (address[] memory) {
 		return challenge.judges;
+	}
+
+	function getJudgesLensIds() public view returns (string[] memory) {
+		return challenge.judgesLensIds;
 	}
 
 	function getActivity() public view returns (string memory) {
@@ -192,7 +281,7 @@ contract ChallengeContract {
 	}
 
 	function getCompletionTimeUnit() public view returns (string memory) {
-		return challenge.completionTimeUnit;
+		return timeUnitToString(challenge.completionTimeUnit);
 	}
 
 	function getActivityPerTimeUnit() public view returns (uint256) {
@@ -201,6 +290,34 @@ contract ChallengeContract {
 
 	function getDuration() public view returns (uint256) {
 		return challenge.duration;
+	}
+
+	function getParticipantByAddress(
+		address participant
+	) public view returns (UserInfo memory) {
+		string memory lensId = addressToParticipantLensId[participant];
+		return UserInfo({ userAddress: participant, lensId: lensId });
+	}
+
+	function getParticipantByLensId(
+		string memory lensId
+	) public view returns (UserInfo memory) {
+		address participant = participantLensIdToAddress[lensId];
+		return UserInfo({ userAddress: participant, lensId: lensId });
+	}
+
+	function getJudgeByAddress(
+		address judge
+	) public view returns (UserInfo memory) {
+		string memory lensId = addressToJudgeLensId[judge];
+		return UserInfo({ userAddress: judge, lensId: lensId });
+	}
+
+	function getJudgeByLensId(
+		string memory lensId
+	) public view returns (UserInfo memory) {
+		address judge = judgeLensIdToAddress[lensId];
+		return UserInfo({ userAddress: judge, lensId: lensId });
 	}
 
 	// Fallback function to prevent sending Ether directly to the contract
