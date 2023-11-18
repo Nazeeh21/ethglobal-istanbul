@@ -41,12 +41,10 @@ export function Nav() {
           <p>New Challenge</p>
         </Link>
         <Link
-          href='/my-challenges'
-          className={`mr-5 text-sm ${
-            pathname !== '/my-challenges' && 'opacity-50'
-          }`}
+          href='/new-home'
+          className={`mr-5 text-sm ${pathname !== '/new-home' && 'opacity-50'}`}
         >
-          <p>My Challenges</p>
+          <p>New Home</p>
         </Link>
         {address && (
           <Link

@@ -127,7 +127,7 @@ export default function Home() {
       }
       {
         dashboardType === 'dashboard' && (      <div className='md:flex min-h-[300px] mt-3'>
-        <div className="border border rounded-tl rounded-bl md:w-[230px] pt-3 px-2 pb-8 flex-col flex">
+        <div className="border rounded-tl rounded-bl md:w-[230px] pt-3 px-2 pb-8 flex-col flex">
           <p className='font-medium ml-4 mb-2 mt-1'>Social Views</p>
           <Button
             onClick={() => setView('profiles')}
