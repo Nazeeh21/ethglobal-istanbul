@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ModeToggle } from '@/components/dropdown';
 import { ChevronRight, Droplets, LogOut } from 'lucide-react';
+import { IconBarbell } from '@tabler/icons-react';
 
 export function Nav() {
   const { open } = useWeb3Modal();
@@ -25,8 +26,8 @@ export function Nav() {
     >
       <div className='py-3 px-8 flex flex-1 items-center p'>
         <Link href='/' className='mr-5 flex items-center'>
-          <Droplets className='opacity-85' size={19} />
-          <p className={`ml-2 mr-4 text-lg font-semibold`}>lenscn</p>
+          <IconBarbell className='h-6 w-6' />
+          <p className={`ml-2 mr-4 text-lg font-semibold`}>APE FIT</p>
         </Link>
         <Link
           href='/'
@@ -77,7 +78,7 @@ export function Nav() {
           </Button>
         )}
 
-        <ModeToggle />
+        {/* <ModeToggle /> */}
       </div>
     </nav>
   );
