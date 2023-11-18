@@ -161,12 +161,29 @@ export default function NewPage() {
           className="w-30"
         />
       </div>
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>Participants Lens ID</span>
+        <Input
+          value={participantsLensId.join(",")}
+          onChange={(e) => setParticipantsLensId(e.target.value.split(","))}
+          className="w-30"
+        />
+      </div>
 
       <div className="flex gap-4 items-center justify-center mt-4">
         <span>Judges</span>
         <Input
           value={judges.join(",")}
           onChange={(e) => setJudges(e.target.value.split(","))}
+          className="w-30"
+        />
+      </div>
+
+      <div className="flex gap-4 items-center justify-center mt-4">
+        <span>Judges Lens Id</span>
+        <Input
+          value={judgesLensId.join(",")}
+          onChange={(e) => setJudgesLensId(e.target.value.split(","))}
           className="w-30"
         />
       </div>
