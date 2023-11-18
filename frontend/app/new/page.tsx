@@ -59,19 +59,20 @@ export default function NewPage() {
       console.log(hash);
 
       if (hash) {
-        await fetch(
-          // TODO: change this to the actual backend url
-          "https://ethglobal-istanbul-backend-gsf5gk0h1-nazeeh21.vercel.app/",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contractAddress: hash,
-            }),
-          }
-        );
+        // TODO: change this to the actual backend url
+        // await fetch(
+        //
+        //   "https://ethglobal-istanbul-backend-gsf5gk0h1-nazeeh21.vercel.app/",
+        //   {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({
+        //       contractAddress: hash,
+        //     }),
+        //   }
+        // );
         alert("Challenge created successfully");
       }
     } catch (error) {
