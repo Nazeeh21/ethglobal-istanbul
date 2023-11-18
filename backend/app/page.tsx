@@ -4,7 +4,7 @@
 import { LensClient, production } from "@lens-protocol/client";
 import { useEffect, useRef, useState } from "react";
 import { createWalletClient, custom } from "viem";
-import { polygon } from "viem/chains";
+import { goerli } from "viem/chains";
 
 // Configuration
 // ========================================================
@@ -27,7 +27,7 @@ const Home = async () => {
   useEffect(() => {
     const init = async () => {
       const walletClient = await createWalletClient({
-        chain: polygon,
+        chain: goerli,
         transport: custom((window as any).ethereum)
     });
     };
