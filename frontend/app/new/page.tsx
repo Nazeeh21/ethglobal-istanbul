@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCreatePost } from '@lens-protocol/react-web'
+import { useCreatePost } from '@lens-protocol/react-web';
+import { create } from 'ipfs-http-client';
 import { NextPage } from 'next';
 import { useState } from 'react';
 
@@ -17,7 +18,6 @@ export default function NewPage() {
   const [amountOfActivityPerTimeUnit, setAmountOfActivityPerTimeUnit] =
     useState(10);
   const [duration, setDuration] = useState(10); // in competion time units
-  const { execute } = useCreatePost();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -35,6 +35,23 @@ export default function NewPage() {
     };
 
     console.log(challenge);
+  };
+
+  const uploadToIpfs = async () => {
+    const challenge = {
+      description,
+      wagerAmount,
+      participants,
+      judges,
+      activity,
+      completionTimeUnit,
+      amountOfActivityPerTimeUnit,
+      duration,
+    };
+
+    const client = create({ url: 'https://ipfs.io/ipfs/' });
+    const res = await client.add(JSON.stringify(challenge));
+    console.log(res);
   };
 
   return (
@@ -106,6 +123,10 @@ export default function NewPage() {
 
       <Button onClick={onSubmit} className='mt-4 mx-auto'>
         Create Challenge
+      </Button>
+
+      <Button onClick={uploadToIpfs} className='mt-4 mx-auto'>
+        Upload to IPFS
       </Button>
     </main>
   );
