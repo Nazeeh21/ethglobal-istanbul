@@ -35,6 +35,7 @@ export const GET = async (request: NextRequest) => {
     // Return
     return NextResponse.json(
       {
+        // @ts-expect-error
         error: error?.message ?? error,
       },
       {

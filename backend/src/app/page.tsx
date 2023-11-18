@@ -1,4 +1,3 @@
-import { WarpFactory, defaultCacheOptions } from "warp-contracts";
 
 // Exports
 // ========================================================

@@ -5,6 +5,7 @@ import type { NextRequest } from "next/server";
 import { OrderByExpression, OperandValueExpressionOrList, OrderByDirectionExpression } from "kysely";
 import { Database } from "@/db/types";
 import { db } from "@/db/kysely";
+import { UndirectedOrderByExpression } from "kysely/dist/cjs/parser/order-by-parser";
 
 // Functions
 // ========================================================
@@ -46,7 +47,7 @@ export const GET = async (request: NextRequest, { params }: { params: { userId: 
 
   // Sort
   queryTodos = queryTodos.orderBy(
-    order as OrderByExpression<Database, "todos", {}>,
+    order as UndirectedOrderByExpression<Database, "todos", {}>,
     sort as OrderByDirectionExpression
   );
 
