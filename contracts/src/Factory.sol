@@ -31,10 +31,10 @@ contract Factory {
         string memory _activity,
         string memory _completionTimeUnit,
         uint256 _activityPerTimeUnit,
-        uint256 _duration
+        uint256 _duration,
+        address _tokenAddress
     ) public returns (address) {
         ChallengeContract challenge = new ChallengeContract(
-            address(this),
             _owner,
             _wagerAmount,
             _participants,
@@ -44,7 +44,8 @@ contract Factory {
             _activity,
             _completionTimeUnit,
             _activityPerTimeUnit,
-            _duration
+            _duration,
+            _tokenAddress
         );
 
         // Store the challenge contract's address

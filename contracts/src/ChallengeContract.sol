@@ -4,14 +4,18 @@ pragma solidity 0.8.20;
 // TODO
 // - Withdraw function - talk to oracle, get response and let everyone withdraw their share
 
-// - Funding function - test if everything works properly
-// - Challenge start - test if challenge is automatically started once the last participant funds the wager amount
+interface IERC20 {
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
 
 /**
  * @title Challenge Contract
  */
 
 contract ChallengeContract {
+    IERC20 public token;
+
 	// Enum for allowed time units
 	enum TimeUnit {
 		Hour,
@@ -23,7 +27,6 @@ contract ChallengeContract {
 
 	// Challenge data structure
 	struct Challenge {
-		address factory;
 		address owner;
 		uint256 wagerAmount;
 		address[] participants;
@@ -34,7 +37,7 @@ contract ChallengeContract {
 		TimeUnit completionTimeUnit;
 		uint256 activityPerTimeUnit;
 		uint256 duration;
-		mapping(address => uint256) deposits;
+        mapping(address => uint256) tokenDeposits;
 		ChallengeState state;
 	}
 
@@ -65,10 +68,10 @@ contract ChallengeContract {
 	event Deposit(address indexed participant, uint256 amount);
 	event ChallengeStarted();
 	event ChallengeFinished(address indexed winner);
+    event TokensDeposited(address indexed participant, uint256 amount);
 
 	// Constructor
 	constructor(
-		address _factory,
 		address _owner,
 		uint256 _wagerAmount,
 		address[] memory _participants,
@@ -78,8 +81,11 @@ contract ChallengeContract {
 		string memory _activity,
 		string memory _completionTimeUnit,
 		uint256 _activityPerTimeUnit,
-		uint256 _duration
+		uint256 _duration,
+        address _tokenAddress // Address of the ERC20 token contract
 	) {
+        token = IERC20(_tokenAddress); // Initialize the ERC20 token contract interface
+
 		require(_participants.length > 0, "At least one participant required");
 		require(_judges.length > 0, "At least one judge required");
 		require(
@@ -90,7 +96,6 @@ contract ChallengeContract {
 			_judges.length == _judgesLensIds.length,
 			"Judges and Lens IDs must match"
 		);
-		challenge.factory = _factory;
 		challenge.owner = _owner;
 		challenge.wagerAmount = _wagerAmount;
 		challenge.participants = _participants;
@@ -169,31 +174,22 @@ contract ChallengeContract {
 		_;
 	}
 
-	// Deposit the wager amount
-	function depositWager()
-		external
-		payable
-		onlyParticipant
-		inState(ChallengeState.Open)
-	{
-		// Convert wager amount to gwei
-		uint256 wagerAmountInGwei = challenge.wagerAmount * 1e9;
+    // Function to deposit ERC20 tokens
+    function depositWagerTokens(uint256 _amount) external onlyParticipant inState(ChallengeState.Open) {
+        // require(_amount >= challenge.wagerAmount * 1e18, "Wager amount too small");
+        require(_amount >= challenge.wagerAmount, "Wager amount too small");
+        
+        // Transfer the tokens from the participant to the contract
+        require(token.transferFrom(msg.sender, address(this), _amount), "Token transfer failed");
+        
+        challenge.tokenDeposits[msg.sender] += _amount;
+        emit TokensDeposited(msg.sender, _amount);
 
-		// Check if the deposited amount is at least equal to the wager amount
-		require(
-			msg.value >= wagerAmountInGwei,
-			"Deposited amount is less than the wager amount"
-		);
-
-		challenge.deposits[msg.sender] += msg.value;
-		emit Deposit(msg.sender, msg.value);
-
-		// Check if all participants have deposited and change the state to Active.
-		if (allParticipantsDeposited()) {
-			challenge.state = ChallengeState.Active;
-			emit ChallengeStarted();
-		}
-	}
+        if (allParticipantsDeposited()) {
+            challenge.state = ChallengeState.Active;
+            emit ChallengeStarted();
+        }
+    }
 
 	// Check whether the caller is a participant
 	function isParticipant(address _addr) public view returns (bool) {
@@ -250,18 +246,13 @@ contract ChallengeContract {
 	function allParticipantsDeposited() internal view returns (bool) {
 		for (uint256 i = 0; i < challenge.participants.length; i++) {
 			if (
-				challenge.deposits[challenge.participants[i]] <
+				challenge.tokenDeposits[challenge.participants[i]] <
 				challenge.wagerAmount
 			) {
 				return false;
 			}
 		}
 		return true;
-	}
-
-	// Getter functions
-	function getFactory() public view returns (address) {
-		return challenge.factory;
 	}
 
 	function getOwner() public view returns (address) {
@@ -330,10 +321,5 @@ contract ChallengeContract {
 	) public view returns (UserInfo memory) {
 		address judge = judgeLensIdToAddress[lensId];
 		return UserInfo({ userAddress: judge, lensId: lensId });
-	}
-
-	// Fallback function to prevent sending Ether directly to the contract
-	receive() external payable {
-		revert("Cannot send ETH directly");
 	}
 }
