@@ -6,6 +6,7 @@ import { OrderByExpression, OrderByDirectionExpression } from "kysely";
 import { db } from "@/db/kysely";
 import { Database } from "@/db/types";
 import cors from "@/libs/cors";
+import { UndirectedOrderByExpression } from "kysely/dist/cjs/parser/order-by-parser";
 
 // Functions
 // ========================================================
@@ -58,7 +59,7 @@ export const GET = async (request: NextRequest) => {
 
   // Sort
   queryUsers = queryUsers.orderBy(
-    order as OrderByExpression<Database, "users", {}>,
+    order as UndirectedOrderByExpression<Database, "users", {}>,
     sort as OrderByDirectionExpression
   );
 
