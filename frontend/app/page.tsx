@@ -246,12 +246,12 @@ export default function Home() {
                 </div> */}
               </div>
 
-              <div className="mx-auto mb-3">
+              <div className="mx-auto w-full mb-3">
                 {loading ? (
                   <div className="text-lg">Loading...</div>
                 ) : (
                   <>
-                    <Button onClick={onSubmit}>Create</Button>
+                    <Button className="w-full" onClick={onSubmit}>Create</Button>
                     {/* <Button onClick={uploadToIpfs} className="mt-4 mx-auto">
       Upload to IPFS
     </Button> */}
