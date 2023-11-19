@@ -1,33 +1,17 @@
 "use client";
-import { useAccount } from "wagmi";
 import { useState } from "react";
-import {
-  useExploreProfiles,
-  useExplorePublications,
-  ExploreProfilesOrderByType,
-  ExplorePublicationsOrderByType,
-  ExplorePublicationType,
-  LimitType,
-} from "@lens-protocol/react-web";
+import { Address, useAccount } from "wagmi";
+import FactorContractABI from "../abi/Factory.json";
 
-import {
-  Loader2,
-  ListMusic,
-  Newspaper,
-  PersonStanding,
-  Shapes,
-  MessageSquare,
-  Repeat2,
-  Heart,
-  Grab,
-  ArrowRight,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ReactMarkdown from "react-markdown";
-import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import {
+  APECOIN_CONTRACT_ADDRESS,
+  FACTORY_CONTRACT_ADDRESS,
+} from "@/constants";
+import { prepareWriteContract, writeContract } from "@wagmi/core";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
+import Image from "next/image";
 
 enum PublicationMetadataMainFocusType {
   Article = "ARTICLE",
@@ -51,51 +35,80 @@ enum PublicationMetadataMainFocusType {
 export default function Home() {
   // State / Props
   const { isConnected } = useAccount();
+  const { address } = useAccount();
+  const [wagerAmount, setWagerAmount] = useState<number>(0); // in matic
+  const [participants, setParticipants] = useState<string[]>([]); // address
+  const [participantsLensId, setParticipantsLensId] = useState<string[]>([]); // lens handles
+  const [judges, setJudges] = useState<string[]>([]); // address handles
+  const [judgesLensId, setJudgesLensId] = useState<string[]>([]); // address handles
+  const [activity, setActivity] = useState<string>(""); // eg. pushups
+  const [completionTimeUnit, setCompletionTimeUnit] = useState(""); // eg. hour / day / week / month / year
+  const [amountOfActivityPerTimeUnit, setAmountOfActivityPerTimeUnit] =
+    useState(0);
+  const [duration, setDuration] = useState(0); // in competion time units
+  const [loading, setLoading] = useState(false);
 
-  // const [view, setView] = useState("profiles");
-  // const [dashboardType, setDashboardType] = useState("dashboard");
-  // let {
-  //   data: profiles,
-  //   error: profileError,
-  //   loading: loadingProfiles,
-  // } = useExploreProfiles({
-  //   limit: LimitType.TwentyFive,
-  //   orderBy: ExploreProfilesOrderByType.MostFollowers,
-  // }) as any;
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    // log out the form values
+    setLoading(true);
 
-  // let { data: musicPubs, loading: loadingMusicPubs } = useExplorePublications({
-  //   limit: LimitType.TwentyFive,
-  //   orderBy: ExplorePublicationsOrderByType.TopCommented,
-  //   where: {
-  //     publicationTypes: [ExplorePublicationType.Post],
-  //     metadata: {
-  //       mainContentFocus: [PublicationMetadataMainFocusType.Audio],
-  //     },
-  //   },
-  // }) as any;
+    try {
+      const challenge = [
+        address,
+        wagerAmount,
+        // description,
+        participants,
+        participantsLensId,
+        judges,
+        ["0x13i0"], "0x179s", // Judges lens id
+        activity,
+        completionTimeUnit,
+        amountOfActivityPerTimeUnit,
+        duration,
+        APECOIN_CONTRACT_ADDRESS as Address,
+      ];
+      console.log(challenge);
 
-  // let { data: publications, loading: loadingPubs } = useExplorePublications({
-  //   limit: LimitType.TwentyFive,
-  //   orderBy: ExplorePublicationsOrderByType.LensCurated,
-  //   where: {
-  //     publicationTypes: [ExplorePublicationType.Post],
-  //   },
-  // }) as any;
+      const config = await prepareWriteContract({
+        address: FACTORY_CONTRACT_ADDRESS,
+        abi: FactorContractABI,
+        functionName: "createChallengeContract",
+        args: challenge,
+      });
 
-  // profiles = profiles?.filter((p) => p.metadata?.picture?.optimized?.uri);
+      const { hash } = await writeContract(config);
+      console.log(hash);
 
-  // publications = publications?.filter((p) => {
-  //   if (p.metadata && p.metadata.asset) {
-  //     if (p.metadata.asset.image) return true;
-  //     return false;
-  //   }
-  //   return true;
-  // });
+      if (hash) {
+        // TODO: change this to the actual backend url
+        // await fetch(
+        //
+        //   "https://ethglobal-istanbul-backend-gsf5gk0h1-nazeeh21.vercel.app/",
+        //   {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({
+        //       contractAddress: hash,
+        //     }),
+        //   }
+        // );
+        alert("Challenge created successfully");
+      }
+    } catch (error) {
+      console.error("error while creating a challenge: ", error);
+      alert("Error while creating a challenge");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const { open } = useWeb3Modal();
 
   return (
-    <main className=" bg-zinc-950 h-screen w-full flex">
+    <main className="text-white bg-zinc-950 h-screen w-full flex">
       <div
         className="w-1/2 h-screen bg-cover bg-bottom"
         style={{ backgroundImage: "url(/images/bg-apefit.png)" }}
@@ -110,51 +123,157 @@ export default function Home() {
           />
         </div>
       </div>
-      <div className="w-1/2">
+      <div className="w-1/2 overflow-y-auto pb-2">
         <div className="p-8 w-full h-screen">
           {isConnected ? (
-            <div>
-              <h1 className="text-4xl mb-2 text-white font-bold uppercase">Create Your Apefit Challenge</h1>
+            <div className="flex flex-col gap-10 items-end ">
+              <h1 className="text-4xl mb-2 mx-auto text-white font-bold uppercase">
+                Create Your Apefit Challenge
+              </h1>
+              <div className="p-4 w-full flex flex-col gap-3 w-3/4 items-end rounded-md border-2 border-gray-600 pl-10">
+                <div className="flex items-center justify-between w-full gap-4 mt-4">
+                  <span className="-ml-5 w-max uppercase font-semibold text-xs text-zinc-500">
+                    I want to do
+                  </span>
+                  <Input
+                    type="number"
+                    value={amountOfActivityPerTimeUnit}
+                    onChange={(e) =>
+                      setAmountOfActivityPerTimeUnit(parseInt(e.target.value))
+                    }
+                    className="w-full max-w-md text-black"
+                  />
+                </div>
+                <div className="flex w-full items-center justify-between gap-4">
+                  <span className="-ml-5 w-max uppercase font-semibold text-xs text-zinc-500">
+                    activity
+                  </span>
+                  <Input
+                    value={activity}
+                    onChange={(e) => setActivity(e.target.value)}
+                    className=" w-3/4 max-w-md text-black"
+                  />
+                </div>
+                <div className="flex w-full justify-between gap-4 uppercase font-semibold text-xs text-zinc-500">
+                  <span className="text-sm">every</span>
+                  <Input
+                    value={completionTimeUnit}
+                    onChange={(e) => setCompletionTimeUnit(e.target.value)}
+                    className="w-full max-w-md text-black"
+                  />
+                </div>
+
+                <div className="flex w-full justify-between gap-4 items-start mt-4">
+                  <div className="flex gap-2">
+                    <span className="uppercase font-semibold text-xs text-zinc-500">
+                      for
+                    </span>
+                    <span className="uppercase font-semibold text-xs text-zinc-500">
+                      {completionTimeUnit}s
+                    </span>
+                  </div>
+                  <Input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                    className=" w-3/4 max-w-md text-black"
+                  />
+                </div>
+                {/* </div> */}
+
+                <hr className="h-1 bg-gray-600 border-2 border-gray-600 w-full rounded" />
+                {/* <div className="flex justify-between items-end flex-col gap-3 w-3/4 rounded-md border-gray-600 pl-10 p-4 border-2"> */}
+                <div className="flex gap-4 items-start w-full justify-between mt-4">
+                  <div className="flex gap-2">
+                    <span className="uppercase font-semibold text-xs text-zinc-500">
+                      Wager
+                    </span>
+                    <span className=" uppercase font-semibold text-xs text-zinc-500">
+                      MATIC
+                    </span>
+                  </div>
+                  <Input
+                    type="number"
+                    value={wagerAmount}
+                    onChange={(e) => setWagerAmount(parseInt(e.target.value))}
+                    className=" w-3/4 max-w-md  text-black"
+                  />
+                </div>
+
+                <div className="flex justify-between w-full  gap-4 items-start  mt-4">
+                  <span className="uppercase font-semibold text-xs text-zinc-500">
+                    Participants
+                  </span>
+                  <Input
+                    value={participants.join(",")}
+                    onChange={(e) => setParticipants(e.target.value.split(","))}
+                    className="w-3/4 max-w-md  text-black"
+                  />
+                </div>
+                <div className="flex justify-between w-full  gap-4 items-center mt-4">
+                  <span className="uppercase font-semibold text-xs text-zinc-500">
+                    Participants Lens ID
+                  </span>
+                  <Input
+                    value={participantsLensId.join(",")}
+                    onChange={(e) =>
+                      setParticipantsLensId(e.target.value.split(","))
+                    }
+                    className=" w-3/4 max-w-md  text-black"
+                  />
+                </div>
+
+                <div className="flex justify-between w-full  gap-4 items-start mt-4">
+                  <span className="uppercase font-semibold text-xs text-zinc-500">
+                    Judges
+                  </span>
+                  <Input
+                    value={judges.join(",")}
+                    onChange={(e) => setJudges(e.target.value.split(","))}
+                    className=" w-3/4 max-w-md  text-black"
+                  />
+                </div>
+
+                {/* <div className="flex justify-between w-full gap-4 items-start mt-4">
+                  <span className="uppercase font-semibold text-xs text-zinc-500">
+                    Judges Lens Id
+                  </span>
+                  <Input
+                    value={judgesLensId.join(",")}
+                    onChange={(e) => setJudgesLensId(e.target.value.split(","))}
+                    className="w-3/4 max-w-md  text-black"
+                  />
+                </div> */}
+              </div>
+
+              <div className="mx-auto mb-3">
+                {loading ? (
+                  <div className="text-lg">Loading...</div>
+                ) : (
+                  <>
+                    <Button onClick={onSubmit}>Create</Button>
+                    {/* <Button onClick={uploadToIpfs} className="mt-4 mx-auto">
+      Upload to IPFS
+    </Button> */}
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex justify-center items-center w-full h-screen">
-            <div className="text-center">
-              <h1 className="text-4xl mb-2 text-white font-bold uppercase">Start Here</h1>
-              <p className="text-xl mb-8 text-zinc-300">Getting swole starts by connecting...</p>
-              <Button onClick={() => open()}>
-                Connect Wallet
-              </Button>
-            </div>
+              <div className="text-center">
+                <h1 className="text-4xl mb-2 text-white font-bold uppercase">
+                  Start Here
+                </h1>
+                <p className="text-xl mb-8 text-zinc-300">
+                  Getting swole starts by connecting...
+                </p>
+                <Button onClick={() => open()}>Connect Wallet</Button>
+              </div>
             </div>
           )}
         </div>
       </div>
     </main>
-    // <main
-    //   className="
-    //   px-6 py-14
-    //   sm:px-10
-    // "
-    // >
-    //   <div className="gap-10 items-center flex w-full">
-    //     <div className=" left-10 top-20 opacity-75">
-    //       <Image
-    //         src="/images/hero-img.png"
-    //         alt="Hero-Img"
-    //         width={650}
-    //         height={650}
-    //       />
-    //     </div>
-    //     <div className="">
-    //       <h1 className="text-5xl font-bold mt-3">
-    //         Ripp your competitors off!!
-    //       </h1>
-    //       <p className="mt-4 max-w-[750px] text-lg text-muted-foreground sm:text-xl">
-    //         A platform to challenge your friends, family and enemies for some
-    //         fitness goals.
-    //       </p>
-    //     </div>
-    //   </div>
-    // </main>
   );
 }
