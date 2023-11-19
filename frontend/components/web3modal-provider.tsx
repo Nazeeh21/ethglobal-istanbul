@@ -19,6 +19,5 @@ const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
 createWeb3Modal({ wagmiConfig, projectId, chains });
 
 export function Web3ModalProvider({ children }) {
-  // @ts-ignore
   return <WagmiConfig config={wagmiConfig}>{children}</WagmiConfig>;
 }
