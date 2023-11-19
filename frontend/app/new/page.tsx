@@ -11,6 +11,7 @@ import { prepareWriteContract, writeContract } from "@wagmi/core";
 import { useState } from "react";
 import { Address, useAccount } from "wagmi";
 import FactorContractABI from "../../abi/Factory.json";
+import { useRouter } from "next/router";
 
 export default function NewPage() {
   const { address } = useAccount();
@@ -25,6 +26,7 @@ export default function NewPage() {
     useState(0);
   const [duration, setDuration] = useState(0); // in competion time units
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -73,7 +75,9 @@ export default function NewPage() {
         //     }),
         //   }
         // );
-        alert("Challenge created successfully");
+        if (confirm("Challenge created successfully")) {
+          router.push("/my-challenges");
+        }
       }
     } catch (error) {
       console.error("error while creating a challenge: ", error);
