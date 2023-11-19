@@ -58,7 +58,8 @@ export default function MyChallangesPage() {
       args: [],
     });
 
-    await writeContract(config);
+    const {hash } =await writeContract(config);
+    console.log(hash);
    } catch (error) {
     console.log(error);
    }

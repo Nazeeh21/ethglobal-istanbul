@@ -61,7 +61,8 @@ export default function Home() {
         participants,
         participantsLensId,
         judges,
-        ["0x13i0", "0x179s"], // Judges lens id
+        judgesLensId,
+        // ["0x13i0"], "0x179s", // Judges lens id
         activity,
         completionTimeUnit,
         amountOfActivityPerTimeUnit,
@@ -234,7 +235,7 @@ export default function Home() {
                   />
                 </div>
 
-                {/* <div className="flex justify-between w-full gap-4 items-start mt-4">
+                <div className="flex justify-between w-full gap-4 items-start mt-4">
                   <span className="uppercase font-semibold text-xs text-zinc-500">
                     Judges Lens Id
                   </span>
@@ -243,7 +244,7 @@ export default function Home() {
                     onChange={(e) => setJudgesLensId(e.target.value.split(","))}
                     className="w-3/4 max-w-md  text-black"
                   />
-                </div> */}
+                </div>
               </div>
 
               <div className="mx-auto w-full mb-3">

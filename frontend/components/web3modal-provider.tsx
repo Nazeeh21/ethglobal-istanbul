@@ -4,7 +4,7 @@ import { WagmiConfig } from 'wagmi';
 import { goerli } from 'wagmi/chains';
 
 const projectId =
-  process.env.NEXT_PUBLIC_WC_ID || '95d7bf3fdce348e27d9d1e441d146b49';
+  process.env.NEXT_PUBLIC_WC_ID || '335bac4c14c31ab929fdcebd992b2b52';
 
 const metadata = {
   name: 'Web3Modal',
