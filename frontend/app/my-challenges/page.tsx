@@ -48,6 +48,7 @@ export default function MyChallangesPage() {
   const withdraw = async (e) => {
     e.preventDefault();
     console.log("withdraw");
+    setLoading(true);
 
    try {
     const config = await prepareWriteContract({

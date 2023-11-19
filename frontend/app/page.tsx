@@ -61,7 +61,7 @@ export default function Home() {
         participants,
         participantsLensId,
         judges,
-        ["0x13i0"], "0x179s", // Judges lens id
+        ["0x13i0", "0x179s"], // Judges lens id
         activity,
         completionTimeUnit,
         amountOfActivityPerTimeUnit,
