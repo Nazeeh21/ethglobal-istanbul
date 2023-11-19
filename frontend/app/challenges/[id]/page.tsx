@@ -29,7 +29,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
       <h1 className='text-3xl font-bold'>{sampleChallenge.description} </h1>
       <div className='mt-10'>
         <h2 className='text-xl font-bold'>Wager Amount</h2>
-        <p className='mt-2'>{sampleChallenge.wagerAmount} MATIC</p>
+        <p className='mt-2'>{sampleChallenge.wagerAmount} APE Coin</p>
       </div>
 
       <div className='mt-10'>

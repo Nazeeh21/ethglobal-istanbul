@@ -190,7 +190,7 @@ export default function Home() {
                       Wager
                     </span>
                     <span className=" uppercase font-semibold text-xs text-zinc-500">
-                      MATIC
+                      APE Coin
                     </span>
                   </div>
                   <Input

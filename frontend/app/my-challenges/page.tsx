@@ -104,7 +104,7 @@ export default function MyChallangesPage() {
                   Wager:{" "}
                 </span>
                 <span className="text-lg  text-white font-bold uppercase">
-                  {challenge.amount} MATIC
+                  {challenge.amount} APE Coin
                 </span>
               </div>
               <div>

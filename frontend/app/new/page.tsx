@@ -150,7 +150,7 @@ export default function NewPage() {
           onChange={(e) => setWagerAmount(parseInt(e.target.value))}
           className="w-20"
         />
-        <span>MATIC</span>
+        <span>APE Coin</span>
       </div>
 
       <div className="flex gap-4 items-center justify-center mt-4">
