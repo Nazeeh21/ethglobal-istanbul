@@ -27,20 +27,6 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   return (
     <main className='px-10 py-14 max-w-fit mx-auto'>
       <h1 className='text-3xl font-bold'>{sampleChallenge.description} </h1>
-
-      {/* <div className='mt-10'>
-        <h2 className='text-xl font-bold'>Activity</h2>
-        <p className='mt-2'>
-          {sampleChallenge.amountOfActivityPerUnit} {sampleChallenge.activity}{' '}
-          per {sampleChallenge.completionTimeUnit}
-        </p>
-      </div>
-
-      <div className='mt-10'>
-        <h2 className='text-xl font-bold'>Duration</h2>
-        <p className='mt-2'>{sampleChallenge.duration} days</p>
-      </div> */}
-
       <div className='mt-10'>
         <h2 className='text-xl font-bold'>Wager Amount</h2>
         <p className='mt-2'>{sampleChallenge.wagerAmount} MATIC</p>

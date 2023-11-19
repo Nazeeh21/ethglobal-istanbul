@@ -132,7 +132,7 @@ export default function Home() {
               </h1>
               <div className="p-4 w-full flex flex-col gap-3 w-3/4 items-end rounded-md border-2 border-gray-600 pl-10">
                 <div className="flex items-center justify-between w-full gap-4 mt-4">
-                  <span className="-ml-5 w-max uppercase font-semibold text-xs text-zinc-500">
+                  <span className=" w-max uppercase font-semibold text-xs text-zinc-500">
                     I want to do
                   </span>
                   <Input
@@ -145,7 +145,7 @@ export default function Home() {
                   />
                 </div>
                 <div className="flex w-full items-center justify-between gap-4">
-                  <span className="-ml-5 w-max uppercase font-semibold text-xs text-zinc-500">
+                  <span className=" w-max uppercase font-semibold text-xs text-zinc-500">
                     activity
                   </span>
                   <Input
@@ -154,8 +154,8 @@ export default function Home() {
                     className=" w-3/4 max-w-md text-black"
                   />
                 </div>
-                <div className="flex w-full justify-between gap-4 uppercase font-semibold text-xs text-zinc-500">
-                  <span className="text-sm">every</span>
+                <div className="flex w-full justify-between gap-4">
+                  <span className=" uppercase font-semibold text-xs text-zinc-500">every</span>
                   <Input
                     value={completionTimeUnit}
                     onChange={(e) => setCompletionTimeUnit(e.target.value)}
